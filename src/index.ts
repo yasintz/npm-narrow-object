@@ -9,7 +9,7 @@ function getKey(key: string, parentKey?: string) {
 function narrowObject(
   obj: Record<string, any>,
   parentKey?: string
-): Record<string, string | number | boolean | null | undefined> {
+): Record<string, string | number | boolean | null | undefined | void> {
   const unordered: Record<string, any> = {};
   Object.keys(obj).forEach(key => {
     const value = obj[key];
