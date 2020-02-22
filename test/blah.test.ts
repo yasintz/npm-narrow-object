@@ -1,7 +1,20 @@
-import { sum } from '../src';
+import narrow from '../src';
 
-describe('blah', () => {
+const obj1 = narrow({
+  key1: 'value1',
+  key2: 'value2',
+  key3: 'value3',
+  key4: 'value4',
+});
+const obj2 = narrow({
+  key4: 'value4',
+  key2: 'value2',
+  key3: 'value3',
+  key1: 'value1',
+});
+
+describe('ToString', () => {
   it('works', () => {
-    expect(sum(1, 1)).toEqual(2);
+    expect(obj1.toString()).toEqual(obj2.toString());
   });
 });

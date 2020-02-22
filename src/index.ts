@@ -1,4 +1,9 @@
 import { isObject, isArray } from './utils';
+
+interface Unordered extends Record<string, any> {
+  toString: () => string;
+}
+
 function getKey(key: string, parentKey?: string) {
   if (typeof parentKey === 'string' && parentKey) {
     return `${parentKey}.${key}`;
@@ -9,8 +14,10 @@ function getKey(key: string, parentKey?: string) {
 function narrowObject(
   obj: Record<string, any>,
   parentKey?: string
-): Record<string, string | number | boolean | null | undefined | void> {
-  const unordered: Record<string, any> = {};
+): Record<string, string | number | boolean | null | undefined | void> & {
+  toString: () => string;
+} {
+  const unordered: Unordered = {};
   Object.keys(obj).forEach(key => {
     const value = obj[key];
     if (isObject(value) || isArray(value)) {
@@ -19,6 +26,8 @@ function narrowObject(
       unordered[getKey(key, parentKey)] = value;
     }
   });
+
+  unordered.toString = () => narrowToString(unordered);
 
   return unordered;
 }
@@ -30,8 +39,8 @@ function narrowToString(unordered: any): string {
     .forEach(function(key) {
       result[key] = unordered[key];
     });
-  return JSON.stringify(result) as any;
+
+  return JSON.stringify(result);
 }
 
-export { narrowToString };
 export default narrowObject;
