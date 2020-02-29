@@ -1,7 +1,13 @@
 import { isObject, isArray } from './utils';
 
-interface Unordered extends Record<string, any> {
+interface Ordered extends Record<string, any> {
   toString: () => string;
+}
+
+interface Options {
+  parentKey?: string;
+  ordered: Ordered;
+  fromRecursive?: boolean;
 }
 
 function getKey(key: string, parentKey?: string) {
@@ -10,26 +16,39 @@ function getKey(key: string, parentKey?: string) {
   }
   return key;
 }
+const canBeOrder = (val: any) => isObject(val) || isArray(val);
 
 function narrowObject(
-  obj: Record<string, any>,
-  parentKey?: string
+  unordered: any,
+  options: Options = { ordered: {} }
 ): Record<string, string | number | boolean | null | undefined | void> & {
   toString: () => string;
 } {
-  const unordered: Unordered = {};
-  Object.keys(obj).forEach(key => {
-    const value = obj[key];
-    if (isObject(value) || isArray(value)) {
-      Object.assign(unordered, narrowObject(value, getKey(key, parentKey)));
-    } else {
-      unordered[getKey(key, parentKey)] = value;
+  const { ordered, parentKey, fromRecursive } = options;
+
+  if (!canBeOrder(unordered) && fromRecursive) {
+    if (!parentKey) {
+      throw new Error('unordered must be object or array');
     }
-  });
 
-  unordered.toString = () => narrowToString(unordered);
+    ordered[parentKey] = unordered;
 
-  return unordered;
+    return ordered;
+  }
+  for (let [key, value] of Object.entries(unordered)) {
+    // INFO: mutate the ordered object.
+    narrowObject(value, {
+      ordered,
+      fromRecursive: true,
+      parentKey: getKey(key, parentKey),
+    });
+  }
+
+  if (!fromRecursive) {
+    ordered.toString = () => narrowToString(ordered);
+  }
+
+  return ordered;
 }
 
 function narrowToString(unordered: any): string {
